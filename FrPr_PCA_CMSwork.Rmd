@@ -1,0 +1,94 @@
+---
+title: "FrPr_PCA"
+author: "Christopher Stewart"
+date: "January 20, 2016"
+output: html_document
+---
+
+## Introduction
+
+This file documents a reanalysis of Franco-Provençal questionnaire data originally performed using Principal Components Analysis (PCA). The aim is to examine questionnaire items that are potentially redundant, i.e. tap into the same latent variable, and to investigate procedures to collapse across such questions.
+
+### Ingesting data, preliminary exploration and pruning
+
+1. To begin, we load the dat into `R` and make a correlation matrix to see how the variables are related to each other:
+
+```{r load_data}
+## set working directory
+setwd("/Users/christopherstewart/Desktop/FrPr_PCA")
+
+## actually load data into R
+data <- read.csv(file = "modified recoded questionnaire data.csv", head = TRUE, sep = ",")
+
+## make correlation matrix
+require(Hmisc)
+data_corrmat <- cor(data)
+
+```
+
+2. The `Warning message:` thrown by the creation of the correlation matrix reveals a valuable insight: some variables have zero variance (i.e. all the same value). Before continuing, we remove those variables:
+
+```{r remove_zero_SD}
+
+## loop through data set and find columns with only one unique value  
+### (N.B.: if we raise this to 3, there are 20 such columns!!!)
+data_no_var <- apply(data, 2, function(x) length(unique(x)) == 1)
+summary(data_no_var)
+
+## the 1 TRUE value indicates that 1 column has no variance (i.e. only one value); we remove that here and regenerate our correlation matrix
+data_2 <- data[, !data_no_var]
+data_corrmat_2 <- cor(data_2)
+
+```
+
+3. With the error gone, we now examine our new correlation matrix. First, we examine variables with |r| >= .9, i.e. variables that are almost perfectly correlated. For ease of reference, we import two functions to aid our exploration.
+
+```{r find_highly_correlated_variables}
+
+## make an object that retains highly correlated variables (functions created by Stephen Turner (see https://gist.github.com/stephenturner/3492773))
+
+cor.prob <- function (X, dfr = nrow(X) - 2) {
+  R <- cor(X, use="pairwise.complete.obs")
+  above <- row(R) < col(R)
+  r2 <- R[above]^2
+  Fstat <- r2 * dfr/(1 - r2)
+  R[above] <- 1 - pf(Fstat, 1, dfr)
+  R[row(R) == col(R)] <- NA
+  R
+}
+
+flattenSquareMatrix <- function(m) {
+  if( (class(m) != "matrix") | (nrow(m) != ncol(m))) stop("Must be a square matrix.") 
+  if(!identical(rownames(m), colnames(m))) stop("Row and column names must be equal.")
+  ut <- upper.tri(m)
+  data.frame(i = rownames(m)[row(m)[ut]],
+             j = rownames(m)[col(m)[ut]],
+             cor=t(m)[ut],
+             p=m[ut])
+}
+
+## apply these functions to our correlation matrix to yield a more digestible output, then print out the five strongest correlations (|r| > .91, p = 0)
+data_corrmat_3 <- flattenSquareMatrix(cor.prob(data_corrmat_2))
+data_hi_corr <- data_corrmat_3[order(-abs(data_corrmat_3$cor)), ]
+print(head(data_hi_corr, n = 5))
+
+```
+
+4. The names of these variables suggest they are highly similar, thus we elect to keep only the first one listed in the correlation matrix, this leaves us with 39 of the original 45 columns.
+
+```{r drop_correlated_columns}
+dropped_cols <- c("L.AUNTS", "L.WITH.FATHER", "L.GRANDMOTHER", "L.YOUNG.CHILD", "l_bestExp")
+data_3 <- data_2[, !(names(data_2) %in% dropped_cols)]
+ncol(data_3)
+
+```
+
+5. We now turn to the PCA. We immediately see that the first component accounts for *96.88% of the variance*, an account visualized in the scree plot. Bearing in mind that this "component" is essentially a linear combination of these variables that accounts for the highest possible degree of variance, it appears that this analysis may be an overly aggressive means of reducing the dimensionality of this questionnaire data. 
+
+```{r dimensionality_reduction}
+data_3_pca <- prcomp(data_3)
+summary(data_3_pca)
+plot(data_3_pca, type = "l", main = "Variance Explained by Components from PCA")
+
+```
+
