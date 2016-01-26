@@ -13,7 +13,7 @@ This file documents a reanalysis of Franco-Provençal questionnaire data origina
 
 1. To begin, we load the dat into `R` and make a correlation matrix to see how the variables are related to each other:
 
-```{r load_data}
+```{r load_data, eval = TRUE}
 ## set working directory
 setwd("/Users/christopherstewart/Desktop/FrPr_PCA")
 
@@ -21,14 +21,14 @@ setwd("/Users/christopherstewart/Desktop/FrPr_PCA")
 data <- read.csv(file = "modified recoded questionnaire data.csv", head = TRUE, sep = ",")
 
 ## make correlation matrix
-require(Hmisc)
+suppressPackageStartupMessages(require("Hmisc"))
 data_corrmat <- cor(data)
 
 ```
 
 2. The `Warning message:` thrown by the creation of the correlation matrix reveals a valuable insight: some variables have zero variance (i.e. all the same value). Before continuing, we remove those variables:
 
-```{r remove_zero_SD}
+```{r remove_zero_SD, eval = TRUE}
 
 ## loop through data set and find columns with only one unique value  
 ### (N.B.: if we raise this to 3, there are 20 such columns!!!)
@@ -43,7 +43,7 @@ data_corrmat_2 <- cor(data_2)
 
 3. With the error gone, we now examine our new correlation matrix. First, we examine variables with |r| >= .9, i.e. variables that are almost perfectly correlated. For ease of reference, we import two functions to aid our exploration.
 
-```{r find_highly_correlated_variables}
+```{r find_highly_correlated_variables, eval = TRUE}
 
 ## make an object that retains highly correlated variables (functions created by Stephen Turner (see https://gist.github.com/stephenturner/3492773))
 
@@ -76,7 +76,7 @@ print(head(data_hi_corr, n = 5))
 
 4. The names of these variables suggest they are highly similar, thus we elect to keep only the first one listed in the correlation matrix, this leaves us with 39 of the original 45 columns.
 
-```{r drop_correlated_columns}
+```{r drop_correlated_columns, eval = TRUE}
 dropped_cols <- c("L.AUNTS", "L.WITH.FATHER", "L.GRANDMOTHER", "L.YOUNG.CHILD", "l_bestExp")
 data_3 <- data_2[, !(names(data_2) %in% dropped_cols)]
 ncol(data_3)
@@ -85,7 +85,7 @@ ncol(data_3)
 
 5. We now turn to the PCA. We immediately see that the first component accounts for *96.88% of the variance*, an account visualized in the scree plot. Bearing in mind that this "component" is essentially a linear combination of these variables that accounts for the highest possible degree of variance, it appears that this analysis may be an overly aggressive means of reducing the dimensionality of this questionnaire data. 
 
-```{r dimensionality_reduction}
+```{r dimensionality_reduction, eval = TRUE}
 data_3_pca <- prcomp(data_3)
 summary(data_3_pca)
 plot(data_3_pca, type = "l", main = "Variance Explained by Components from PCA")

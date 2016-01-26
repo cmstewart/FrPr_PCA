@@ -83,20 +83,8 @@ setwd(&quot;/Users/christopherstewart/Desktop/FrPr_PCA&quot;)
 data &lt;- read.csv(file = &quot;modified recoded questionnaire data.csv&quot;, head = TRUE, sep = &quot;,&quot;)
 
 ## make correlation matrix
-require(Hmisc)</code></pre>
-<pre><code>## Loading required package: Hmisc
-## Loading required package: grid
-## Loading required package: lattice
-## Loading required package: survival
-## Loading required package: Formula
-## Loading required package: ggplot2
-## 
-## Attaching package: 'Hmisc'
-## 
-## The following objects are masked from 'package:base':
-## 
-##     format.pval, round.POSIXt, trunc.POSIXt, units</code></pre>
-<pre class="r"><code>data_corrmat &lt;- cor(data)</code></pre>
+suppressPackageStartupMessages(require(&quot;Hmisc&quot;))
+data_corrmat &lt;- cor(data)</code></pre>
 <pre><code>## Warning in cor(data): the standard deviation is zero</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>The <code>Warning message:</code> thrown by the creation of the correlation matrix reveals a valuable insight: some variables have zero variance (i.e. all the same value). Before continuing, we remove those variables:</li>
@@ -153,7 +141,7 @@ data_3 &lt;- data_2[, !(names(data_2) %in% dropped_cols)]
 ncol(data_3)</code></pre>
 <pre><code>## [1] 39</code></pre>
 <ol start="5" style="list-style-type: decimal">
-<li>We now turn to the PCA. We immediately see that the first component accounts for <em>96.88% of the variance</em>, an account visualized in the scree plot. Bearing in mind that this “component” is essentially a linear combination of these features that accounts for the highest possible degree of variance,</li>
+<li>We now turn to the PCA. We immediately see that the first component accounts for <em>96.88% of the variance</em>, an account visualized in the scree plot. Bearing in mind that this “component” is essentially a linear combination of these variables that accounts for the highest possible degree of variance, it appears that this analysis may be an overly aggressive means of reducing the dimensionality of this questionnaire data.</li>
 </ol>
 <pre class="r"><code>data_3_pca &lt;- prcomp(data_3)
 summary(data_3_pca)</code></pre>
